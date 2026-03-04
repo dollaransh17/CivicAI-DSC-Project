@@ -5,6 +5,9 @@ import ReportPage from "./pages/ReportPage";
 import TrackPage from "./pages/TrackPage";
 import BotPage from "./pages/BotPage";
 import MayorSimulator from "./components/MayorSimulator";
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Home from './pages/HomePage'
+import NotReady from './pages/NotReady'
 
 export default function App() {
   return (
@@ -19,4 +22,9 @@ export default function App() {
       </Routes>
     </BrowserRouter>
   );
+}
+        <Route path="/:feature" element={<NotReady />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
