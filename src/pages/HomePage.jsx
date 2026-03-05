@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-//Anshul
+
 function Ico({ paths, size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
@@ -40,6 +40,13 @@ const FEATURES = [
     color: '#34d399',
     rgb: '52,211,153',
     route: 'bot',
+  },
+  {
+    title: 'Mayor Policy Simulator',
+    desc: 'Test how city policies could impact traffic, pollution, and citizen satisfaction using simulated civic data.',
+    color: '#f59e0b',
+    rgb: '245,158,11',
+    route: 'mayor-simulator',
   },
 ]
 
@@ -270,7 +277,6 @@ export default function Home() {
             </div>
             <span style={{ fontWeight: 700, fontSize: 14 }}>Civic<span style={{ color: '#38bdf8' }}>AI</span></span>
           </div>
-
         </div>
       </footer>
 

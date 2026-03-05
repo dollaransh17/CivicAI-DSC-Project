@@ -4,6 +4,7 @@ const pg = {
   report: { t: 'Report an Issue', c: '#0ea5e9', r: '14,165,233' },
   track:  { t: 'Track My Issue',  c: '#a78bfa', r: '167,139,250' },
   bot:    { t: 'CivicAI Bot',     c: '#34d399', r: '52,211,153' },
+  'mayor-simulator': { t: 'Mayor Policy Simulator', c: '#f59e0b', r: '245,158,11' },
 }
 const fallback = { t: 'Unknown', c: '#64748b', r: '100,116,139' }
 
