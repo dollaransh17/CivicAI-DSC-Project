@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-//Anshul
+
 function Ico({ paths, size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
@@ -40,6 +40,13 @@ const FEATURES = [
     color: '#34d399',
     rgb: '52,211,153',
     route: 'bot',
+  },
+  {
+    title: 'Mayor Policy Simulator',
+    desc: 'Test how city policies could impact traffic, pollution, and citizen satisfaction using simulated civic data.',
+    color: '#f59e0b',
+    rgb: '245,158,11',
+    route: 'mayor-simulator',
   },
 ]
 
@@ -131,6 +138,7 @@ export default function Home() {
             src="https://sketchfab.com/models/b491f1e70152461cba34fc7a2d7c6e4c/embed?autospin=1&autostart=1&ui_hint=0&ui_controls=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_watermark_link=0&ui_watermark=0&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0"
           />
         </div>
+
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: 120, zIndex: 4,
           background: 'linear-gradient(to bottom, #030712 0%, #030712 50%, transparent 100%)',
@@ -152,6 +160,7 @@ export default function Home() {
           background: 'linear-gradient(to bottom, transparent 0%, #030712 60%)',
           pointerEvents: 'none',
         }} />
+
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: 48, zIndex: 3,
           background: '#030712',
@@ -169,89 +178,101 @@ export default function Home() {
 
             return (
               <FogReveal key={feat.title} delay={i * 0.15}>
-              <div style={{ position: 'relative' }}>
-                <div
-                  style={{
+                <div style={{ position: 'relative' }}>
+                  <div style={{
                     display: 'flex',
                     flexDirection: isRight ? 'row-reverse' : 'row',
                     alignItems: 'center',
                     gap: 48,
                     position: 'relative',
                     zIndex: 2,
-                  }}
-                >
-                  <div
-                    style={{
+                  }}>
+
+                    <div style={{
                       width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
                       position: 'relative',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all .4s ease',
-                    }}
-                  >
-                    <div style={{
-                      position: 'absolute', inset: -8, borderRadius: '50%',
-                      background: `radial-gradient(circle, rgba(${feat.rgb},${isHov ? 0.5 : 0.15}) 0%, transparent 70%)`,
-                      filter: `blur(${isHov ? 14 : 8}px)`,
-                      transition: 'all .4s ease',
-                    }} />
-                    <div style={{
-                      position: 'absolute', inset: -20, borderRadius: '50%',
-                      background: `radial-gradient(circle, rgba(${feat.rgb},${isHov ? 0.25 : 0.05}) 0%, transparent 70%)`,
-                      filter: `blur(${isHov ? 24 : 12}px)`,
-                      transition: 'all .4s ease',
-                    }} />
-                    <div style={{
-                      width: isHov ? 20 : 14, height: isHov ? 20 : 14, borderRadius: '50%',
-                      background: feat.color,
-                      boxShadow: `0 0 ${isHov ? 28 : 12}px rgba(${feat.rgb},${isHov ? 0.8 : 0.4})`,
-                      transition: 'all .4s ease',
-                      position: 'relative', zIndex: 1,
-                    }} />
+                    }}>
+                      <div style={{
+                        position: 'absolute', inset: -8, borderRadius: '50%',
+                        background: `radial-gradient(circle, rgba(${feat.rgb},${isHov ? 0.5 : 0.15}) 0%, transparent 70%)`,
+                        filter: `blur(${isHov ? 14 : 8}px)`,
+                        transition: 'all .4s ease',
+                      }} />
+                      <div style={{
+                        position: 'absolute', inset: -20, borderRadius: '50%',
+                        background: `radial-gradient(circle, rgba(${feat.rgb},${isHov ? 0.25 : 0.05}) 0%, transparent 70%)`,
+                        filter: `blur(${isHov ? 24 : 12}px)`,
+                        transition: 'all .4s ease',
+                      }} />
+                      <div style={{
+                        width: isHov ? 20 : 14,
+                        height: isHov ? 20 : 14,
+                        borderRadius: '50%',
+                        background: feat.color,
+                        boxShadow: `0 0 ${isHov ? 28 : 12}px rgba(${feat.rgb},${isHov ? 0.8 : 0.4})`,
+                        transition: 'all .4s ease',
+                        position: 'relative',
+                        zIndex: 1,
+                      }} />
+                    </div>
+
+                    <div
+                      onMouseEnter={() => setHovered(i)}
+                      onMouseLeave={() => setHovered(null)}
+                      onClick={() => navigate(`/${feat.route}`)}
+                      style={{
+                        flex: 1,
+                        maxWidth: 480,
+                        padding: '32px 36px',
+                        borderRadius: 22,
+                        background: isHov ? `rgba(${feat.rgb},0.06)` : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${isHov ? `rgba(${feat.rgb},0.3)` : 'rgba(255,255,255,0.05)'}`,
+                        boxShadow: isHov ? `0 0 60px rgba(${feat.rgb},0.1), inset 0 0 30px rgba(${feat.rgb},0.03)` : 'none',
+                        transition: 'all .4s ease',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <h3 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
+                        {feat.title}
+                      </h3>
+                      <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.7 }}>
+                        {feat.desc}
+                      </p>
+                    </div>
+
                   </div>
 
-                  <div
-                    onMouseEnter={() => setHovered(i)}
-                    onMouseLeave={() => setHovered(null)}
-                    onClick={() => navigate(`/${feat.route}`)}
-                    style={{
-                      flex: 1, maxWidth: 480,
-                      padding: '32px 36px',
-                      borderRadius: 22,
-                      background: isHov ? `rgba(${feat.rgb},0.06)` : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${isHov ? `rgba(${feat.rgb},0.3)` : 'rgba(255,255,255,0.05)'}`,
-                      boxShadow: isHov ? `0 0 60px rgba(${feat.rgb},0.1), inset 0 0 30px rgba(${feat.rgb},0.03)` : 'none',
-                      transition: 'all .4s ease',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <h3 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{feat.title}</h3>
-                    <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.7 }}>{feat.desc}</p>
-                  </div>
+                  {!isLast && (
+                    <div style={{
+                      position: 'relative',
+                      height: 80,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      zIndex: 1,
+                    }}>
+                      <div style={{
+                        width: 2,
+                        height: '100%',
+                        background: `linear-gradient(to bottom, rgba(${feat.rgb},0.4), rgba(${FEATURES[i + 1].rgb},0.4))`,
+                        borderRadius: 2,
+                        boxShadow: `0 0 16px rgba(${feat.rgb},0.2), 0 0 16px rgba(${FEATURES[i + 1].rgb},0.2)`,
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%,-50%)',
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: `rgba(${FEATURES[i + 1].rgb},0.6)`,
+                        boxShadow: `0 0 14px rgba(${FEATURES[i + 1].rgb},0.5)`,
+                      }} />
+                    </div>
+                  )}
                 </div>
-
-                {!isLast && (
-                  <div style={{
-                    position: 'relative',
-                    height: 80,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    zIndex: 1,
-                  }}>
-                    <div style={{
-                      width: 2, height: '100%',
-                      background: `linear-gradient(to bottom, rgba(${feat.rgb},0.4), rgba(${FEATURES[i + 1].rgb},0.4))`,
-                      borderRadius: 2,
-                      boxShadow: `0 0 16px rgba(${feat.rgb},0.2), 0 0 16px rgba(${FEATURES[i + 1].rgb},0.2)`,
-                    }} />
-                    <div style={{
-                      position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-                      width: 8, height: 8, borderRadius: '50%',
-                      background: `rgba(${FEATURES[i + 1].rgb},0.6)`,
-                      boxShadow: `0 0 14px rgba(${FEATURES[i + 1].rgb},0.5)`,
-                    }} />
-                  </div>
-                )}
-              </div>
               </FogReveal>
             )
           })}
@@ -268,9 +289,10 @@ export default function Home() {
             }}>
               <Ico paths={IC.pin} size={12} />
             </div>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Civic<span style={{ color: '#38bdf8' }}>AI</span></span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>
+              Civic<span style={{ color: '#38bdf8' }}>AI</span>
+            </span>
           </div>
-
         </div>
       </footer>
 
