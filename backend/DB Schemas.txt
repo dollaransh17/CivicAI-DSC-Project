@@ -1,0 +1,85 @@
+//Users
+{
+  "name": "john doe",
+  "email": "mail",
+  "password_hash": "auhf",
+
+  "locality": "ksfkjfnf",
+
+  "role": "skfnbk",
+
+  "created_at": "2026-03-05T10:30:00Z"
+}
+
+//Issues
+{
+
+  "title": "pothole",
+  "description": "causing traffic jams",
+
+  "reported_by": ObjectId("USER_ID"),
+
+  "department": "Road",
+  "ai_department": "BBMP",
+
+  "priority": "high",
+  "ai_priority": "high",
+
+  "status": "raised",
+
+  "location": {
+    "type": "Point",
+    "coordinates": [1.00,2.00]
+  },
+
+  "address": "Whitefield Main Road",
+
+  "image_id": ObjectId("gridfs_file_id") ,
+
+  "assigned_worker": ObjectId("WORKER_ID"),
+
+  "created_at": "2026-03-05T10:30:00Z",
+
+  "resolved_image": ObjectId("gridfs_file_id"),
+
+  "resolved_at": "time"
+}
+
+//admin
+{
+
+  "name": "abc",
+
+  "email": "admin@bbmp.gov",
+
+  "password_hash": "...",
+
+  "department": "BBMP",
+
+  "post": "Supervisor",
+
+  "workers": [
+      ObjectId("worker1"),
+      ObjectId("worker2")
+  ]
+}
+
+//Worker
+{
+  "_id": ObjectId,
+
+  "name": "Worker A",
+
+  "email": "worker@bbmp.gov",
+
+  "password_hash": "...",
+
+  "department": "Road",
+
+  "specialization": "Pothole repair",
+
+  "assigned_tasks": [
+      ObjectId("issue_id_1"),
+      ObjectId("issue_id_2")
+  ]
+}
