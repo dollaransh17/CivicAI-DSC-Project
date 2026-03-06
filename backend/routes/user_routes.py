@@ -1,7 +1,10 @@
+from bson import ObjectId
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from services.issue_service import create_issue
 from utils.auth_dependency import get_current_user
 from services.issue_service import get_user_issues,get_nearby_issues
+
+from database import issues_collection
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -46,3 +49,13 @@ def nearby_issues(lat: float, lng: float, radius: int = 1000):
     issues = get_nearby_issues(lat, lng, radius)
 
     return issues
+
+@router.get("/issue/{issue_id}")
+def get_issue(issue_id: str):
+
+    issue = issues_collection.find_one({"_id": ObjectId(issue_id)})
+
+    issue["_id"] = str(issue["_id"])
+    issue["image_id"] = str(issue["image_id"])
+
+    return issue

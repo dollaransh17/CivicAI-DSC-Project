@@ -1,7 +1,10 @@
 from datetime import datetime
+
+import pymongo
 from bson import ObjectId
 import database as db
 from services.gemini_service import analyze_issue
+from utils.mongo_serializer import serialize_doc
 
 issues_collection = db.issues_collection
 fs = db.fs
@@ -46,7 +49,8 @@ async def create_issue(title, description, department, latitude, longitude, imag
 
         "assigned_worker": None,
 
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow(),
+        "resolved_at": None
     }
 
     result = issues_collection.insert_one(new_issue)
@@ -58,14 +62,10 @@ def get_user_issues(user_id):
     issues = list(
         issues_collection.find(
             {"reported_by": ObjectId(user_id)}
-        )
+        ).sort("created_at", -1)
     )
 
-    for issue in issues:
-        issue["_id"] = str(issue["_id"])
-        issue["image_id"] = str(issue["image_id"])
-
-    return issues
+    return [serialize_doc(issue) for issue in issues]
 
 def get_nearby_issues(lat, lng, radius):
 
@@ -80,11 +80,7 @@ def get_nearby_issues(lat, lng, radius):
                     "$maxDistance": radius
                 }
             }
-        })
+        }).limit(25)
     )
 
-    for issue in issues:
-        issue["_id"] = str(issue["_id"])
-        issue["image_id"] = str(issue["image_id"])
-
-    return issues
+    return [serialize_doc(issue) for issue in issues]
