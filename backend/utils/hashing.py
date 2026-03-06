@@ -6,7 +6,6 @@ pwd_context = CryptContext(
 )
 
 def hash_password(password: str):
-    # enforce bcrypt limit
     if len(password.encode("utf-8")) > 72:
         password = password[:72]
 

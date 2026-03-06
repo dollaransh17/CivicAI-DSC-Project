@@ -1,14 +1,13 @@
-import google.generativeai as genai
 import os
 import json
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+api_key=os.getenv("GEMINI_API_KEY")
 
-model = genai.GenerativeModel("gemini-3-flash-preview")
-
+client = genai.Client(api_key=api_key)
 
 def analyze_issue(description: str):
 
@@ -40,7 +39,10 @@ Return ONLY valid JSON in this format:
 }}
 """
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-3-flash-preview",
+        contents=prompt,
+    )
 
     try:
         data = json.loads(response.text)
