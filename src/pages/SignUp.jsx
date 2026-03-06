@@ -35,7 +35,7 @@ export default function SignUp() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0284c7 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#030712', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', width: 500, height: 500, top: -200, right: -150, background: '#0ea5e9', opacity: 0.15, borderRadius: '50%', filter: 'blur(100px)' }} />
       <div style={{ position: 'absolute', width: 400, height: 400, bottom: -150, left: -100, background: '#7c3aed', opacity: 0.1, borderRadius: '50%', filter: 'blur(80px)' }} />
       
