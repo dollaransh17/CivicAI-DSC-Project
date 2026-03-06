@@ -17,6 +17,11 @@ const IC = {
   report:  ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M12 18v-6', 'M9 15h6'],
   track:   ['M22 12h-4l-3 9L9 3l-3 9H2'],
   bot:     ['M12 8V4H8', 'M2 14h2', 'M20 14h2', 'M15 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2', 'M9 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2', 'M6 10h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z'],
+  sun:     ['M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z', 'M12 1v2', 'M12 21v2', 'M4.22 4.22l1.42 1.42', 'M18.36 18.36l1.42 1.42', 'M1 12h2', 'M21 12h2', 'M4.22 19.78l1.42-1.42', 'M18.36 5.64l1.42-1.42'],
+  moon:    ['M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'],
+  user:    ['M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2', 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8'],
+  mapPin:  ['M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z', 'M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6'],
+  alert:   ['M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z', 'M12 9v4', 'M12 17h.01'],
 }
 
 const FEATURES = [
@@ -47,6 +52,13 @@ const FEATURES = [
     color: '#f59e0b',
     rgb: '245,158,11',
     route: 'mayor-simulator',
+  },
+  {
+    title: 'Nearby Issues',
+    desc: 'View civic issues reported in your vicinity — potholes, broken lights, garbage, water leaks and more.',
+    color: '#ef4444',
+    rgb: '239,68,68',
+    route: 'nearby',
   },
 ]
 
@@ -82,7 +94,17 @@ function FogReveal({ children, delay = 0 }) {
 export default function Home() {
   const [scrolled, setScrolled] = useState(false)
   const [hovered, setHovered] = useState(null)
+  const [darkMode, setDarkMode] = useState(true)
   const navigate = useNavigate()
+
+  const theme = {
+    bg: darkMode ? '#030712' : '#f8fafc',
+    text: darkMode ? '#fff' : '#0f172a',
+    textMuted: darkMode ? '#94a3b8' : '#64748b',
+    card: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.04)',
+    border: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(15,23,42,0.1)',
+    navBg: darkMode ? 'rgba(3,7,18,0.88)' : 'rgba(248,250,252,0.88)',
+  }
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20)
@@ -91,14 +113,14 @@ export default function Home() {
   }, [])
 
   return (
-    <div style={{ background: '#030712', color: '#fff', fontFamily: "'Inter',system-ui,sans-serif", overflowX: 'hidden' }}>
+    <div style={{ background: theme.bg, color: theme.text, fontFamily: "'Inter',system-ui,sans-serif", overflowX: 'hidden', transition: 'background 0.3s, color 0.3s' }}>
 
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 60,
         display: 'flex', alignItems: 'center',
-        background: scrolled ? 'rgba(3,7,18,0.88)' : 'transparent',
+        background: scrolled ? theme.navBg : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
+        borderBottom: scrolled ? `1px solid ${theme.border}` : '1px solid transparent',
         transition: 'all .35s',
       }}>
         <div style={{ ...wrap, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -115,9 +137,16 @@ export default function Home() {
               Civic<span style={{ color: '#38bdf8' }}>AI</span>
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span className="pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#4ade80', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Live</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={() => setDarkMode(!darkMode)} style={{ background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`, borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', color: darkMode ? '#fbbf24' : '#1e293b' }}>
+              <Ico paths={darkMode ? IC.sun : IC.moon} size={18} />
+            </button>
+            <button onClick={() => navigate('/signin')} style={{ background: 'transparent', border: `1px solid ${theme.border}`, borderRadius: 8, padding: '6px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: theme.text, transition: 'all 0.2s' }}>Sign In</button>
+            <button onClick={() => navigate('/signup')} style={{ background: 'linear-gradient(135deg,#0ea5e9,#0369a1)', border: 'none', borderRadius: 8, padding: '7px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#fff' }}>Sign Up</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span className="pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#4ade80', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Live</span>
+            </div>
           </div>
         </div>
       </nav>
@@ -224,15 +253,15 @@ export default function Home() {
                       flex: 1, maxWidth: 480,
                       padding: '32px 36px',
                       borderRadius: 22,
-                      background: isHov ? `rgba(${feat.rgb},0.06)` : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${isHov ? `rgba(${feat.rgb},0.3)` : 'rgba(255,255,255,0.05)'}`,
+                      background: isHov ? `rgba(${feat.rgb},0.06)` : theme.card,
+                      border: `1px solid ${isHov ? `rgba(${feat.rgb},0.3)` : theme.border}`,
                       boxShadow: isHov ? `0 0 60px rgba(${feat.rgb},0.1), inset 0 0 30px rgba(${feat.rgb},0.03)` : 'none',
                       transition: 'all .4s ease',
                       cursor: 'pointer',
                     }}
                   >
-                    <h3 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{feat.title}</h3>
-                    <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.7 }}>{feat.desc}</p>
+                    <h3 style={{ fontSize: 22, fontWeight: 700, color: theme.text, marginBottom: 8 }}>{feat.title}</h3>
+                    <p style={{ color: theme.textMuted, fontSize: 14, lineHeight: 1.7 }}>{feat.desc}</p>
                   </div>
                 </div>
 
@@ -265,7 +294,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '28px 24px' }}>
+      <footer style={{ borderTop: `1px solid ${theme.border}`, padding: '28px 24px' }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
@@ -275,7 +304,7 @@ export default function Home() {
             }}>
               <Ico paths={IC.pin} size={12} />
             </div>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Civic<span style={{ color: '#38bdf8' }}>AI</span></span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: theme.text }}>Civic<span style={{ color: '#38bdf8' }}>AI</span></span>
           </div>
         </div>
       </footer>
