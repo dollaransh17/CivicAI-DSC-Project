@@ -15,20 +15,30 @@ export default function SignIn() {
     }
   }, [searchParams])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
-    const users = JSON.parse(localStorage.getItem('civicai_users') || '[]')
-    const user = users.find(u => u.email === email && u.password === password)
-    
-    if (!user) {
-      setError('Invalid email or password')
-      return
+
+    try {
+      const res = await fetch('http://localhost:8000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.detail || data.message || 'Invalid email or password')
+        return
+      }
+
+      localStorage.setItem('civicai_token', data.token || data.access_token)
+      localStorage.setItem('civicai_user', JSON.stringify(data.user || { email }))
+      navigate('/')
+    } catch {
+      setError('Could not connect to server. Is the backend running?')
     }
-    
-    localStorage.setItem('civicai_current_user', JSON.stringify(user))
-    navigate('/')
   }
 
   return (

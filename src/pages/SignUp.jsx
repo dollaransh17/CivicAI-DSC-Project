@@ -9,29 +9,38 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
     }
-    
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters')
       return
     }
-    
-    const users = JSON.parse(localStorage.getItem('civicai_users') || '[]')
-    if (users.find(u => u.email === email)) {
-      setError('Email already registered')
-      return
+
+    try {
+      const res = await fetch('http://localhost:8000/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.detail || data.message || 'Registration failed')
+        return
+      }
+
+      navigate('/signin?registered=true')
+    } catch {
+      setError('Could not connect to server. Is the backend running?')
     }
-    
-    users.push({ name, email, password })
-    localStorage.setItem('civicai_users', JSON.stringify(users))
-    navigate('/signin?registered=true')
   }
 
   return (
