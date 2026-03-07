@@ -10,11 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from bson import ObjectId
 from database import client, db
-<<<<<<< HEAD
 from fastapi.middleware.cors import CORSMiddleware
 
-=======
->>>>>>> 5d161d7 (Migrated from  pymongo to motor client and successfully merged with suhas's backend-dev branch)
 
 # Suhas - Start
 # This loads the link from your .env file (which we will make next)
@@ -23,7 +20,6 @@ load_dotenv()
 app = FastAPI()
 
 # Connection logic
-<<<<<<< HEAD
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],   # change later
@@ -31,11 +27,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-=======
 
 
 
->>>>>>> 5d161d7 (Migrated from  pymongo to motor client and successfully merged with suhas's backend-dev branch)
 
 <<<<<<< HEAD
 
