@@ -1,23 +1,46 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL, authHeaders } from "../utils/api";
 
 export default function MayorSimulator() {
   const [policy, setPolicy] = useState("");
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const simulate = () => {
-    if (!policy) return;
+  const simulate = async () => {
+    if (!policy.trim()) return;
+    setError("");
+    setLoading(true);
+    setResult(null);
 
-    const traffic = Math.floor(Math.random() * 20) - 10;
-    const pollution = Math.floor(Math.random() * 15) - 5;
-    const satisfaction = Math.floor(Math.random() * 40) + 40;
+    try {
+      const res = await fetch(`${BASE_URL}/simulate`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ policy }),
+      });
 
-    setResult({
-      traffic,
-      pollution,
-      satisfaction,
-    });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || data.message || `Error ${res.status}`);
+
+      setResult({
+        traffic: data.traffic,
+        pollution: data.pollution,
+        satisfaction: data.satisfaction,
+      });
+    } catch {
+      // Fallback to local simulation if backend not reachable
+      setResult({
+        traffic: Math.floor(Math.random() * 20) - 10,
+        pollution: Math.floor(Math.random() * 15) - 5,
+        satisfaction: Math.floor(Math.random() * 40) + 40,
+      });
+      setError("Backend not reachable — showing local simulation.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -135,20 +158,26 @@ export default function MayorSimulator() {
 
             <button
               onClick={simulate}
+              disabled={loading}
               style={{
                 padding: "14px 22px",
                 borderRadius: 14,
                 border: "none",
-                background: "linear-gradient(135deg,#0ea5e9,#0369a1)",
+                background: loading ? "rgba(14,165,233,0.4)" : "linear-gradient(135deg,#0ea5e9,#0369a1)",
                 color: "#fff",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 boxShadow: "0 8px 24px rgba(14,165,233,0.35)",
+                transition: "background 0.2s",
               }}
             >
-              Run Simulation
+              {loading ? "Running…" : "Run Simulation"}
             </button>
           </div>
+
+          {error && (
+            <p style={{ color: "#f59e0b", fontSize: 13, marginBottom: 16 }}>{error}</p>
+          )}
 
           {result && (
             <div

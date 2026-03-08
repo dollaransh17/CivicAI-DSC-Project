@@ -1,17 +1,42 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL, authHeaders } from "../utils/api";
 
 const statuses = ["submitted", "assigned", "in progress", "resolved"];
 
 export default function TrackPage() {
+  const [reports, setReports] = useState([]);
   const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const reports = JSON.parse(localStorage.getItem("reports") || "[]");
-    if (reports.length > 0) {
-      setReport(reports[reports.length - 1]);
-    }
+    const loadReports = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch(`${BASE_URL}/reports`, { headers: authHeaders() });
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        const data = await res.json();
+        // API may return array directly or { reports: [...] }
+        const arr = Array.isArray(data) ? data : (data.reports || []);
+        setReports(arr);
+        if (arr.length > 0) setReport(arr[arr.length - 1]);
+      } catch {
+        // Fall back to localStorage if backend isn't reachable yet
+        const local = JSON.parse(localStorage.getItem("reports") || "[]");
+        if (local.length > 0) {
+          setReports(local);
+          setReport(local[local.length - 1]);
+        } else {
+          setError("Could not fetch reports from server. Submit an issue first.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadReports();
   }, []);
 
   const getStatusIndex = (status) => statuses.indexOf(status);
@@ -91,7 +116,32 @@ export default function TrackPage() {
             Track My Issue
           </h1>
 
-          {!report && (
+          {loading && (
+            <p style={{ color: "#94a3b8" }}>Loading your reports…</p>
+          )}
+
+          {!loading && error && !report && (
+            <>
+              <p style={{ color: "#ef4444", marginBottom: 16, fontSize: 14 }}>{error}</p>
+              <button
+                onClick={() => navigate("/report")}
+                style={{
+                  padding: "14px 22px",
+                  borderRadius: 14,
+                  border: "none",
+                  background: "linear-gradient(135deg,#0ea5e9,#0369a1)",
+                  color: "#fff",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  boxShadow: "0 8px 24px rgba(14,165,233,0.35)",
+                }}
+              >
+                Report an Issue
+              </button>
+            </>
+          )}
+
+          {!loading && !error && !report && (
             <>
               <p style={{ color: "#94a3b8", marginBottom: 24 }}>
                 No reports found. Submit an issue first.

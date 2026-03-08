@@ -1,37 +1,82 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../utils/api";
 
 export default function ReportPage() {
   const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const getLocation = () => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setLocation({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      });
-    });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setError("Could not get location. Please allow location access.")
+    );
   };
 
-  const submitReport = () => {
-    const report = {
-      id: Date.now(),
-      description,
-      image,
-      location,
-      status: "submitted",
-      time: new Date().toISOString(),
-    };
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
-    const existing = JSON.parse(localStorage.getItem("reports") || "[]");
-    existing.push(report);
-    localStorage.setItem("reports", JSON.stringify(existing));
+  const submitReport = async () => {
+    if (!description.trim()) {
+      setError("Please describe the issue before submitting.");
+      return;
+    }
+    setError("");
+    setLoading(true);
 
-    alert("Issue submitted successfully!");
-    navigate("/");
+    try {
+      const token = localStorage.getItem("civicai_token");
+
+      // Build FormData so we can send both JSON fields and the image file
+      const formData = new FormData();
+      formData.append("description", description);
+      if (location) {
+        formData.append("lat", location.lat);
+        formData.append("lng", location.lng);
+      }
+      if (imageFile) formData.append("image", imageFile);
+
+      const res = await fetch(`${BASE_URL}/reports`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || `Server error ${res.status}`);
+      }
+
+      // Also cache locally so TrackPage can show it without a separate fetch
+      const localReport = {
+        id: data.id || Date.now(),
+        description,
+        image: imagePreview,
+        location,
+        status: data.status || "submitted",
+        time: data.created_at || new Date().toISOString(),
+      };
+      const existing = JSON.parse(localStorage.getItem("reports") || "[]");
+      existing.push(localReport);
+      localStorage.setItem("reports", JSON.stringify(existing));
+
+      alert("Issue submitted successfully!");
+      navigate("/");
+    } catch (err) {
+      setError(err.message || "Failed to submit. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -141,16 +186,17 @@ export default function ReportPage() {
 
           <input
             type="file"
-            onChange={(e) => setImage(URL.createObjectURL(e.target.files[0]))}
+            accept="image/*"
+            onChange={handleImageChange}
             style={{
               marginBottom: 20,
               color: "#94a3b8",
             }}
           />
 
-          {image && (
+          {imagePreview && (
             <img
-              src={image}
+              src={imagePreview}
               alt="preview"
               style={{
                 width: "100%",
@@ -161,6 +207,10 @@ export default function ReportPage() {
                 border: "1px solid rgba(255,255,255,0.08)",
               }}
             />
+          )}
+
+          {error && (
+            <p style={{ color: "#ef4444", marginBottom: 16, fontSize: 14 }}>{error}</p>
           )}
 
           <button
@@ -189,20 +239,24 @@ export default function ReportPage() {
 
           <button
             onClick={submitReport}
+            disabled={loading}
             style={{
               width: "100%",
               padding: "16px",
               borderRadius: 16,
               border: "none",
-              background: "linear-gradient(135deg,#0ea5e9,#0369a1)",
+              background: loading
+                ? "rgba(14,165,233,0.4)"
+                : "linear-gradient(135deg,#0ea5e9,#0369a1)",
               color: "#fff",
               fontWeight: 700,
               fontSize: 15,
-              cursor: "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
               boxShadow: "0 10px 30px rgba(14,165,233,0.35)",
+              transition: "background 0.2s",
             }}
           >
-            Submit Issue
+            {loading ? "Submitting…" : "Submit Issue"}
           </button>
         </div>
       </div>
