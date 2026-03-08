@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from models import Admin, Worker
 from routes.auth_routes import router as auth_router
 from routes.user_routes import router as user_router
+from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from bson import ObjectId
@@ -28,6 +29,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+async def create_indexes():
+    """Auto-create required MongoDB indexes on startup."""
+    try:
+        from database import db
+        await db.issues.create_index([("location", "2dsphere")])
+    except Exception as e:
+        print(f"[startup] Index creation skipped or failed: {e}")
 
 
 @app.get("/")
@@ -182,6 +192,116 @@ async def assign_issue_to_worker(issue_id: str, worker_email: str):
 
 
 # Suhas - End
+
+
+# --- Bot & Simulator Endpoints ---
+
+class BotMessage(BaseModel):
+    message: str
+
+class PolicyInput(BaseModel):
+    policy: str
+
+
+@app.post("/bot")
+async def civic_bot(body: BotMessage):
+    msg = body.message.lower()
+
+    # Try Gemini first
+    try:
+        import asyncio
+        from services.gemini_service import client as gemini_client
+
+        prompt = f"""You are CivicAI, a helpful civic assistant chatbot. A citizen says:
+
+"{body.message}"
+
+Provide a helpful, concise response about civic issues (reporting problems, tracking issues, city services, etc.).
+Keep it under 3 sentences."""
+
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: gemini_client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt
+            )
+        )
+        return {"reply": response.text}
+    except Exception:
+        pass
+
+    # Fallback: keyword-based replies
+    if "report" in msg:
+        return {"reply": "You can report a civic issue using the Report page. Include a photo and description for faster response!"}
+    if "track" in msg:
+        return {"reply": "Head to the Track page to see real-time status updates on your submitted issues."}
+    if "traffic" in msg:
+        return {"reply": "Traffic issues can be reported with a photo and location so authorities can respond quickly."}
+    if "garbage" in msg or "waste" in msg:
+        return {"reply": "Garbage collection problems are a common civic issue. Report it with a photo for faster action."}
+    if "water" in msg:
+        return {"reply": "Water supply issues should be reported to the Water Supply department. Use the Report page to file a complaint."}
+    if "hello" in msg or "hi" in msg:
+        return {"reply": "Hello! I'm CivicAI, your civic assistant. I can help you report issues, track complaints, or learn about city services."}
+
+    return {"reply": "I'm here to help with civic issues. You can ask about reporting problems, tracking issues, or city services!"}
+
+
+@app.post("/simulate")
+async def simulate_policy(body: PolicyInput):
+    policy = body.policy.lower()
+
+    # Try Gemini first
+    try:
+        import asyncio, json
+        from services.gemini_service import client as gemini_client
+
+        prompt = f"""You are a city policy impact simulator. A mayor proposes this policy:
+
+"{body.policy}"
+
+Estimate the impact on:
+1. Traffic (percentage change, negative = improvement)
+2. Pollution (percentage change, negative = improvement)
+3. Citizen satisfaction (0-100 score)
+
+Return ONLY valid JSON:
+{{"traffic": <number>, "pollution": <number>, "satisfaction": <number>}}"""
+
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: gemini_client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt
+            )
+        )
+        data = json.loads(response.text)
+        return {
+            "traffic": data.get("traffic", 0),
+            "pollution": data.get("pollution", 0),
+            "satisfaction": data.get("satisfaction", 50)
+        }
+    except Exception:
+        pass
+
+    # Fallback: heuristic logic
+    import random
+    traffic = random.randint(-15, 10)
+    pollution = random.randint(-10, 5)
+    satisfaction = random.randint(40, 80)
+
+    if "bus" in policy or "transit" in policy or "metro" in policy:
+        traffic = random.randint(-20, -5)
+        satisfaction = random.randint(60, 85)
+    if "tree" in policy or "green" in policy or "park" in policy:
+        pollution = random.randint(-15, -3)
+        satisfaction = random.randint(65, 90)
+    if "tax" in policy:
+        satisfaction = random.randint(25, 50)
+
+    return {"traffic": traffic, "pollution": pollution, "satisfaction": satisfaction}
 
 
 # Ashmit - Start

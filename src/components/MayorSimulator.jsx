@@ -4,20 +4,42 @@ import { useNavigate } from "react-router-dom";
 export default function MayorSimulator() {
   const [policy, setPolicy] = useState("");
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const simulate = () => {
+  const simulate = async () => {
     if (!policy) return;
 
-    const traffic = Math.floor(Math.random() * 20) - 10;
-    const pollution = Math.floor(Math.random() * 15) - 5;
-    const satisfaction = Math.floor(Math.random() * 40) + 40;
+    setLoading(true);
+    setError("");
+    setResult(null);
 
-    setResult({
-      traffic,
-      pollution,
-      satisfaction,
-    });
+    try {
+      const res = await fetch("/api/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ policy }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.detail || "Simulation failed");
+        setLoading(false);
+        return;
+      }
+
+      setResult({
+        traffic: data.traffic,
+        pollution: data.pollution,
+        satisfaction: data.satisfaction,
+      });
+    } catch {
+      setError("Could not connect to server. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -104,8 +126,22 @@ export default function MayorSimulator() {
             }}
           >
             Simulate how city policies could influence traffic, pollution,
-            and overall citizen satisfaction.
+            and overall citizen satisfaction using AI-powered analysis.
           </p>
+
+          {error && (
+            <div style={{
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 10,
+              padding: '12px 16px',
+              color: '#ef4444',
+              fontSize: 14,
+              marginBottom: 20,
+            }}>
+              {error}
+            </div>
+          )}
 
           <div
             style={{
@@ -120,6 +156,7 @@ export default function MayorSimulator() {
               placeholder="Example: Increase bus routes or plant more trees..."
               value={policy}
               onChange={(e) => setPolicy(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") simulate(); }}
               style={{
                 flex: 1,
                 minWidth: 260,
@@ -135,18 +172,21 @@ export default function MayorSimulator() {
 
             <button
               onClick={simulate}
+              disabled={loading}
               style={{
                 padding: "14px 22px",
                 borderRadius: 14,
                 border: "none",
-                background: "linear-gradient(135deg,#0ea5e9,#0369a1)",
+                background: loading
+                  ? "rgba(14,165,233,0.3)"
+                  : "linear-gradient(135deg,#0ea5e9,#0369a1)",
                 color: "#fff",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 boxShadow: "0 8px 24px rgba(14,165,233,0.35)",
               }}
             >
-              Run Simulation
+              {loading ? "Simulating..." : "Run Simulation"}
             </button>
           </div>
 

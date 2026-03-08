@@ -7,56 +7,48 @@ export default function BotPage() {
   ]);
 
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const botReply = (msg) => {
-    const m = msg.toLowerCase();
-
-    if (m.includes("report")) {
-      return {
-        text: "You can report an issue using the Report page.",
-        action: () => navigate("/report")
-      };
-    }
-
-    if (m.includes("track")) {
-      return {
-        text: "You can track your issue here.",
-        action: () => navigate("/track")
-      };
-    }
-
-    if (m.includes("traffic")) {
-      return {
-        text: "Traffic issues can be reported with a photo and location so authorities can respond quickly."
-      };
-    }
-
-    if (m.includes("garbage") || m.includes("waste")) {
-      return {
-        text: "Garbage collection problems are a common civic issue. You can report it with a photo."
-      };
-    }
-
-    return {
-      text: "I'm here to help with civic issues. You can ask about reporting or tracking problems."
-    };
-  };
-
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
 
     const userMessage = { from: "user", text: input };
-    const reply = botReply(input);
-
-    const botMessage = { from: "bot", text: reply.text };
-
-    setMessages([...messages, userMessage, botMessage]);
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput("");
+    setLoading(true);
 
-    if (reply.action) {
-      setTimeout(reply.action, 1200);
+    try {
+      const res = await fetch("/api/bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: currentInput }),
+      });
+
+      const data = await res.json();
+      const botMessage = { from: "bot", text: data.reply || "Sorry, I couldn't process that." };
+      setMessages((prev) => [...prev, botMessage]);
+
+      // Navigation hints
+      const reply = (data.reply || "").toLowerCase();
+      if (reply.includes("report page")) {
+        setTimeout(() => navigate("/report"), 2000);
+      } else if (reply.includes("track page")) {
+        setTimeout(() => navigate("/track"), 2000);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { from: "bot", text: "Could not connect to server. Is the backend running?" },
+      ]);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") sendMessage();
   };
 
   return (
@@ -157,12 +149,20 @@ export default function BotPage() {
                 </div>
               </div>
             ))}
+            {loading && (
+              <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 10 }}>
+                <div style={{ padding: "10px 14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "#94a3b8" }}>
+                  Thinking...
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Ask about reporting or tracking issues..."
               style={{
                 flex: 1,
@@ -170,19 +170,23 @@ export default function BotPage() {
                 borderRadius: 12,
                 border: "1px solid rgba(255,255,255,0.1)",
                 background: "rgba(255,255,255,0.02)",
-                color: "white"
+                color: "white",
+                outline: "none",
               }}
             />
 
             <button
               onClick={sendMessage}
+              disabled={loading}
               style={{
                 padding: "12px 18px",
                 borderRadius: 12,
                 border: "none",
-                background: "linear-gradient(135deg,#0ea5e9,#0369a1)",
+                background: loading
+                  ? "rgba(14,165,233,0.3)"
+                  : "linear-gradient(135deg,#0ea5e9,#0369a1)",
                 color: "white",
-                cursor: "pointer"
+                cursor: loading ? "not-allowed" : "pointer"
               }}
             >
               Send

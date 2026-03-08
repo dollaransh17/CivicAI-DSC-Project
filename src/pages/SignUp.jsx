@@ -7,6 +7,7 @@ export default function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [locality, setLocality] = useState('')
   const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
@@ -18,16 +19,16 @@ export default function SignUp() {
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
       return
     }
 
     try {
-      const res = await fetch('http://localhost:8000/signup', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, locality }),
       })
 
       const data = await res.json()
@@ -103,6 +104,30 @@ export default function SignUp() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
+              required
+              style={{
+                width: '100%',
+                padding: '14px 18px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 12,
+                color: '#fff',
+                fontSize: 15,
+                outline: 'none',
+                transition: 'border-color 0.2s, background 0.2s',
+              }}
+              onFocus={(e) => { e.target.style.borderColor = 'rgba(14,165,233,0.5)'; e.target.style.background = 'rgba(14,165,233,0.05)' }}
+              onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.background = 'rgba(255,255,255,0.04)' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', color: '#94a3b8', fontSize: 13, marginBottom: 8, fontWeight: 500 }}>Locality</label>
+            <input
+              type="text"
+              value={locality}
+              onChange={(e) => setLocality(e.target.value)}
+              placeholder="e.g. Whitefield, Bengaluru"
               required
               style={{
                 width: '100%',

@@ -1,17 +1,47 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const statuses = ["submitted", "assigned", "in progress", "resolved"];
+const statuses = ["raised", "assigned", "in progress", "resolved"];
 
 export default function TrackPage() {
-  const [report, setReport] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const reports = JSON.parse(localStorage.getItem("reports") || "[]");
-    if (reports.length > 0) {
-      setReport(reports[reports.length - 1]);
-    }
+    const fetchReports = async () => {
+      try {
+        const token = localStorage.getItem("civicai_token");
+        if (!token) {
+          setError("Please sign in to view your issues.");
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch("/api/users/my-issues", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setError(data.detail || "Failed to fetch issues");
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        setReports(data);
+      } catch {
+        setError("Could not connect to server. Is the backend running?");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
   }, []);
 
   const getStatusIndex = (status) => statuses.indexOf(status);
@@ -88,10 +118,28 @@ export default function TrackPage() {
               letterSpacing: "-0.02em",
             }}
           >
-            Track My Issue
+            Track My Issues
           </h1>
 
-          {!report && (
+          {error && (
+            <div style={{
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 10,
+              padding: '12px 16px',
+              color: '#ef4444',
+              fontSize: 14,
+              marginBottom: 20,
+            }}>
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <p style={{ color: "#94a3b8" }}>Loading your issues...</p>
+          )}
+
+          {!loading && !error && reports.length === 0 && (
             <>
               <p style={{ color: "#94a3b8", marginBottom: 24 }}>
                 No reports found. Submit an issue first.
@@ -115,81 +163,127 @@ export default function TrackPage() {
             </>
           )}
 
-          {report && (
-            <>
-              <div style={{ marginBottom: 30 }}>
-                <h3 style={{ fontSize: 18, marginBottom: 6 }}>
-                  Issue Description
+          {reports.map((report) => (
+            <div
+              key={report._id}
+              style={{
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 18,
+                padding: "28px",
+                marginBottom: 20,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700 }}>
+                  {report.title}
                 </h3>
-
-                <p style={{ color: "#94a3b8" }}>{report.description}</p>
+                <span
+                  style={{
+                    padding: "4px 14px",
+                    borderRadius: 20,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    background:
+                      report.status === "resolved"
+                        ? "rgba(52,211,153,0.15)"
+                        : report.status === "assigned"
+                        ? "rgba(14,165,233,0.15)"
+                        : "rgba(245,158,11,0.15)",
+                    color:
+                      report.status === "resolved"
+                        ? "#34d399"
+                        : report.status === "assigned"
+                        ? "#38bdf8"
+                        : "#f59e0b",
+                    border: `1px solid ${
+                      report.status === "resolved"
+                        ? "rgba(52,211,153,0.3)"
+                        : report.status === "assigned"
+                        ? "rgba(14,165,233,0.3)"
+                        : "rgba(245,158,11,0.3)"
+                    }`,
+                  }}
+                >
+                  {report.status}
+                </span>
               </div>
 
-              {report.image && (
+              <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 12 }}>
+                {report.description}
+              </p>
+
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13, color: "#64748b", marginBottom: 16 }}>
+                <span>📁 {report.department}</span>
+                {report.ai_department && report.ai_department !== report.department && (
+                  <span>🤖 AI: {report.ai_department}</span>
+                )}
+                {report.priority && (
+                  <span style={{
+                    color: report.priority === "high" ? "#ef4444" : report.priority === "medium" ? "#f59e0b" : "#34d399"
+                  }}>
+                    ⚡ {report.priority} priority
+                  </span>
+                )}
+                {report.created_at && (
+                  <span>🕐 {new Date(report.created_at).toLocaleDateString()}</span>
+                )}
+              </div>
+
+              {report.image_id && (
                 <img
-                  src={report.image}
+                  src={`/api/users/image/${report.image_id}`}
                   alt="issue"
                   style={{
                     width: "100%",
                     maxHeight: 260,
                     objectFit: "cover",
                     borderRadius: 16,
-                    marginBottom: 30,
+                    marginBottom: 20,
                     border: "1px solid rgba(255,255,255,0.08)",
                   }}
                 />
               )}
 
-              {report.location && (
-                <p style={{ color: "#94a3b8", marginBottom: 30 }}>
-                  Location: {report.location.lat.toFixed(4)},{" "}
-                  {report.location.lng.toFixed(4)}
-                </p>
-              )}
-
-              <div style={{ marginTop: 20 }}>
-                <h3 style={{ marginBottom: 20 }}>Issue Progress</h3>
-
-                {statuses.map((s, i) => {
-                  const active = i <= getStatusIndex(report.status);
-
-                  return (
-                    <div
-                      key={s}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginBottom: 20,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: "50%",
-                          background: active ? "#0ea5e9" : "#374151",
-                          boxShadow: active
-                            ? "0 0 14px rgba(14,165,233,0.7)"
-                            : "none",
-                          marginRight: 16,
-                        }}
-                      />
-
-                      <span
-                        style={{
-                          textTransform: "capitalize",
-                          color: active ? "#fff" : "#6b7280",
-                          fontWeight: active ? 600 : 400,
-                        }}
-                      >
-                        {s}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div style={{ marginTop: 12 }}>
+                <h4 style={{ marginBottom: 14, fontSize: 14, color: "#94a3b8" }}>Progress</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  {statuses.map((s, i) => {
+                    const active = i <= getStatusIndex(report.status);
+                    return (
+                      <div key={s} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                        <div
+                          style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            background: active ? "#0ea5e9" : "#374151",
+                            boxShadow: active ? "0 0 10px rgba(14,165,233,0.6)" : "none",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div style={{
+                          flex: 1,
+                          height: 2,
+                          background: i < statuses.length - 1
+                            ? (i < getStatusIndex(report.status) ? "#0ea5e9" : "#374151")
+                            : "transparent",
+                          marginLeft: 4,
+                        }} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+                  {statuses.map((s) => (
+                    <span key={s} style={{ fontSize: 10, color: "#64748b", textTransform: "capitalize" }}>{s}</span>
+                  ))}
+                </div>
               </div>
-            </>
-          )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
